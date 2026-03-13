@@ -3,7 +3,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
 from app import db
 from app.models import Usuario
-from app.forms import RegistroForm, LoginForm
+from app.forms import RegistroForm, LoginForm, ActualizarPerfilForm, CambiarPasswordForm
 
 bp = Blueprint('auth', __name__)
 
@@ -56,7 +56,41 @@ def logout():
     flash('Has cerrado sesión exitosamente.', 'info')
     return redirect(url_for('main.index'))
 
-@bp.route('/perfil')
+
+
+@bp.route('/perfil', methods=['GET', 'POST'])
 @login_required
 def perfil():
-    return render_template('auth/perfil.html', usuario=current_user)
+    """Ver y editar perfil del usuario"""
+    perfil_form = ActualizarPerfilForm()
+    password_form = CambiarPasswordForm()
+    
+    # Procesar actualización de datos personales
+    if perfil_form.validate_on_submit() and 'actualizar_datos' in request.form:
+        current_user.nombre = perfil_form.nombre.data
+        current_user.apellidos = perfil_form.apellidos.data
+        current_user.telefono = perfil_form.telefono.data
+        db.session.commit()
+        flash('✅ Datos actualizados correctamente', 'success')
+        return redirect(url_for('auth.perfil'))
+    
+    # Procesar cambio de contraseña
+    if password_form.validate_on_submit() and 'cambiar_password' in request.form:
+        if current_user.check_password(password_form.password_actual.data):
+            current_user.set_password(password_form.nueva_password.data)
+            db.session.commit()
+            flash('✅ Contraseña actualizada correctamente', 'success')
+            return redirect(url_for('auth.perfil'))
+        else:
+            flash('❌ Contraseña actual incorrecta', 'danger')
+    
+    # Cargar datos actuales en el formulario
+    if request.method == 'GET':
+        perfil_form.nombre.data = current_user.nombre
+        perfil_form.apellidos.data = current_user.apellidos
+        perfil_form.telefono.data = current_user.telefono
+    
+    return render_template('auth/perfil.html', 
+                         perfil_form=perfil_form,
+                         password_form=password_form,
+                         usuario=current_user)
