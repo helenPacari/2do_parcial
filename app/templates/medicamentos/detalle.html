@@ -2,7 +2,6 @@
 cp app/templates/medicamentos/detalle.html app/templates/medicamentos/detalle.html.bak
 
 # Crear el archivo corregido
-cat > app/templates/medicamentos/detalle.html << 'EOF'
 {% extends "base.html" %}
 
 {% block title %}Detalle de {{ medicamento.nombre }} - Farmacia App{% endblock %}

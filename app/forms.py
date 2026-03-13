@@ -226,3 +226,35 @@ class ActualizarPerfilForm(FlaskForm):
         Length(min=8, max=20)
     ])
     submit = SubmitField('Actualizar Datos')
+
+# app/forms.py - Agregar al final
+
+class AdminCrearUsuarioForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[
+        DataRequired(message="El nombre es obligatorio"),
+        Length(min=2, max=50)
+    ])
+    apellidos = StringField('Apellidos', validators=[
+        DataRequired(message="Los apellidos son obligatorios"),
+        Length(min=2, max=100)
+    ])
+    telefono = StringField('Teléfono', validators=[
+        DataRequired(message="El teléfono es obligatorio"),
+        Length(min=8, max=20)
+    ])
+    email = StringField('Email', validators=[
+        DataRequired(message="El email es obligatorio"),
+        Email(message="Ingresa un email válido")
+    ])
+    rol = SelectField('Rol', choices=[
+        ('vendedor', 'Vendedor'),
+        ('bodeguero', 'Bodeguero'),
+        ('admin', 'Administrador')
+    ], validators=[DataRequired()])
+    submit = SubmitField('Crear Usuario')
+    
+    def validate_email(self, email):
+        from app.models import Usuario
+        usuario = Usuario.query.filter_by(email=email.data).first()
+        if usuario:
+            raise ValidationError('Este email ya está registrado.')

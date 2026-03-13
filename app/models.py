@@ -19,6 +19,10 @@ class Usuario(db.Model, UserMixin):
     fecha_registro = db.Column(db.DateTime, default=datetime.utcnow)
     activo = db.Column(db.Boolean, default=True)
     rol = db.Column(db.String(20), default='vendedor')  # admin, vendedor, bodeguero
+
+    primer_inicio = db.Column(db.Boolean, default=True)  # Para obligar cambio de password
+    password_temp = db.Column(db.Boolean, default=False)  # Indica si usa password temporal
+
     
     # Relaciones
     medicamentos_creados = db.relationship('Medicamento', foreign_keys='Medicamento.creado_por_id', backref='creado_por_usuario', lazy='dynamic')
@@ -34,6 +38,15 @@ class Usuario(db.Model, UserMixin):
     
     def __repr__(self):
         return f'<Usuario {self.nombre} {self.apellidos}>'
+    
+    def generar_password_temporal(self):
+        """Genera una contraseña aleatoria simple"""
+        import random
+        import string
+        # Genera una contraseña de 8 caracteres (letras y números)
+        caracteres = string.ascii_letters + string.digits
+        temp_pass = ''.join(random.choice(caracteres) for _ in range(8))
+        return temp_pass
 
 # ============================================
 # TABLAS NUEVAS: CATEGORÍA Y LABORATORIO
