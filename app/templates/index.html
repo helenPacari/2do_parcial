@@ -1,57 +1,263 @@
 {% extends "base.html" %}
 
-{% block title %}Inicio - Farmacia App{% endblock %}
+{% block title %}Dashboard - Farmacia App{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-12">
-        <div class="jumbotron bg-light p-5 rounded">
-            <h1 class="display-4">¡Bienvenido a Farmacia App! 🏥</h1>
-            <p class="lead">
-                Sistema de gestión farmacéutica para administrar medicamentos, inventario y más.
-            </p>
-            <hr class="my-4">
-            <p>Selecciona una opción para comenzar:</p>
+<div class="container-fluid">
+    <!-- Encabezado -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1><i class="fas fa-chart-line"></i> Dashboard Inteligente</h1>
+            <p class="lead">Bienvenido, {{ current_user.nombre }}. Aquí tienes un análisis inteligente de tu farmacia.</p>
+        </div>
+    </div>
+
+    <!-- Tarjetas de KPIs principales -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Ventas del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.ventas_mes }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-shopping-cart fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Ingresos del Mes</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">${{ "{:,.0f}".format(stats.ingresos_mes) }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-dollar-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Clientes Nuevos</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.clientes_nuevos }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-users fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Stock Bajo</div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">{{ stats.stock_bajo }}</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-exclamation-triangle fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Análisis IA (solo visible para admin y vendedores) -->
+    {% if analisis_ia %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-robot"></i> Análisis Inteligente de Datos</h5>
+                </div>
+                <div class="card-body">
+                    {{ analisis_ia|safe }}
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-info-circle"></i> Análisis generado por IA basado en datos reales de tu farmacia
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Predicciones de Stock -->
+    {% if predicciones_stock %}
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-warning">
+                    <h5 class="mb-0"><i class="fas fa-chart-line"></i> Predicciones de Stock</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Medicamento</th>
+                                    <th>Stock Actual</th>
+                                    <th>Venta Diaria (prom.)</th>
+                                    <th>Días Restantes</th>
+                                    <th>Nivel</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pred in predicciones_stock %}
+                                <tr>
+                                    <td>{{ pred.medicamento }}</td>
+                                    <td>{{ pred.stock }}</td>
+                                    <td>{{ pred.venta_diaria }}</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-{{ pred.color }}" 
+                                                 style="width: {{ (pred.dias_restantes/30)*100 }}%"
+                                                 role="progressbar">
+                                                {{ pred.dias_restantes }} días
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ pred.color }}">
+                                            {{ pred.nivel }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer text-muted small">
+                    <i class="fas fa-info-circle"></i> Predicciones basadas en el promedio de ventas de los últimos 30 días
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Productos más vendidos y categorías -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-crown"></i> Top 5 Productos Más Vendidos</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for producto in stats.productos_mas_vendidos %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ producto[0] }}
+                            <span class="badge bg-primary rounded-pill">{{ producto[1] }} vendidos</span>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No hay datos de ventas aún</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-tags"></i> Categorías Populares</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for categoria in stats.categorias_populares %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ categoria[0] }}
+                            <span class="badge bg-info rounded-pill">{{ categoria[1] }} productos</span>
+                        </div>
+                        {% else %}
+                        <p class="text-muted">No hay categorías registradas</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertas y notificaciones -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0"><i class="fas fa-bell"></i> Alertas del Sistema</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle"></i>
+                                <strong>{{ stats.stock_bajo }}</strong> productos con stock bajo
+                                {% if stats.stock_bajo > 0 %}
+                                    <a href="{{ url_for('medicamentos.listar', filtro='stock_bajo') }}" class="alert-link">Ver</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-info">
+                                <i class="fas fa-calendar-alt"></i>
+                                <strong>{{ stats.por_vencer }}</strong> productos por vencer (30 días)
+                                {% if stats.por_vencer > 0 %}
+                                    <a href="{{ url_for('medicamentos.listar', filtro='por_vencer') }}" class="alert-link">Ver</a>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="alert alert-success">
+                                <i class="fas fa-user-plus"></i>
+                                <strong>{{ stats.clientes_nuevos }}</strong> clientes nuevos este mes
+                                <a href="{{ url_for('clientes.listar') }}" class="alert-link">Ver todos</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
-<div class="row mt-4">
-    <div class="col-md-4">
-        <div class="card text-white bg-primary mb-3">
-            <div class="card-header">
-                <h5 class="card-title">💊 Medicamentos</h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">Gestiona el inventario de medicamentos: alta, baja, modificación y consulta.</p>
-                <a href="{{ url_for('medicamentos.listar') }}" class="btn btn-light">Ir a Medicamentos</a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card text-white bg-success mb-3">
-            <div class="card-header">
-                <h5 class="card-title">👤 Mi Perfil</h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">Consulta y actualiza tu información personal.</p>
-                <a href="{{ url_for('auth.perfil') }}" class="btn btn-light">Ver Perfil</a>
-            </div>
-        </div>
-    </div>
-    
-    <div class="col-md-4">
-        <div class="card text-white bg-info mb-3">
-            <div class="card-header">
-                <h5 class="card-title">📊 Estadísticas</h5>
-            </div>
-            <div class="card-body">
-                <p class="card-text">Visualiza reportes y estadísticas del inventario.</p>
-                <a href="#" class="btn btn-light">Ver Estadísticas</a>
-            </div>
-        </div>
-    </div>
-</div>
+<!-- Estilos adicionales -->
+<style>
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+.progress {
+    height: 20px;
+    margin-bottom: 0;
+}
+</style>
 {% endblock %}
 EOF
