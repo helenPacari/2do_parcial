@@ -27,12 +27,14 @@ def create_app():
         from app import models  # noqa
 
     # Registrar Blueprints
-    from app.routes import main, medicamentos, auth, clientes, ventas
+    from app.routes import main, medicamentos, auth, clientes, ventas, admin, chatbot
     
     app.register_blueprint(main.bp)
     app.register_blueprint(medicamentos.bp)
     app.register_blueprint(auth.bp)
     app.register_blueprint(clientes.bp)
     app.register_blueprint(ventas.bp)
-
+    app.register_blueprint(admin.bp)  # ← Agregar esta línea
+    app.register_blueprint(chatbot.bp)  
+    
     return app

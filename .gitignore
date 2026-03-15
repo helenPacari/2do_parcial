@@ -1,5 +1,5 @@
 # Crear el archivo .gitignore
-cat > .gitignore << 'EOF'
+
 # Entorno virtual
 venv/
 env/
