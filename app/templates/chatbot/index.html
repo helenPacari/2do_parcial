@@ -1,0 +1,274 @@
+{% extends "base.html" %}
+
+{% block title %}Asistente Farmacéutico - Chatbot{% endblock %}
+
+{% block head %}
+<style>
+    .chat-container {
+        height: 500px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        background-color: #f8f9fa;
+    }
+    .message {
+        margin-bottom: 15px;
+        max-width: 80%;
+    }
+    .user-message {
+        margin-left: auto;
+        background-color: #007bff;
+        color: white;
+        border-radius: 15px 15px 0 15px;
+        padding: 10px 15px;
+    }
+    .bot-message {
+        background-color: white;
+        border-radius: 15px 15px 15px 0;
+        padding: 10px 15px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .typing-indicator {
+        background-color: #e9ecef;
+        border-radius: 15px;
+        padding: 10px 15px;
+        display: inline-block;
+    }
+    .typing-indicator span {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: #6c757d;
+        margin: 0 2px;
+        animation: typing 1s infinite;
+    }
+    @keyframes typing {
+        0%, 60%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-10px); }
+    }
+    .suggestion-chip {
+        display: inline-block;
+        padding: 8px 15px;
+        margin: 5px;
+        background-color: #e9ecef;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    .suggestion-chip:hover {
+        background-color: #dee2e6;
+    }
+    .medicamento-card {
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 10px;
+        margin-top: 10px;
+        background-color: white;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <h1><i class="fas fa-robot"></i> Asistente Farmacéutico</h1>
+            <p class="lead">Consulta sobre síntomas y recibe recomendaciones de medicamentos</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <!-- Área del chat -->
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-comments"></i> Chat de Consultas</h5>
+                </div>
+                <div class="card-body">
+                    <div id="chatContainer" class="chat-container">
+                        <div class="message bot-message">
+                            👋 ¡Hola! Soy tu asistente farmacéutico virtual.<br>
+                            Puedo ayudarte a recomendar medicamentos basados en los síntomas del cliente.<br><br>
+                            <strong>Ejemplos de consultas:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>"Cliente con dolor de cabeza intenso"</li>
+                                <li>"Paciente con fiebre y tos"</li>
+                                <li>"Síntomas de alergia: estornudos y picazón"</li>
+                                <li>"Dolor muscular después de hacer ejercicio"</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <!-- Formulario de entrada -->
+                    <div class="mt-3">
+                        <div class="row">
+                            <div class="col-md-4 mb-2">
+                                <input type="number" class="form-control" id="edad" placeholder="Edad (opcional)">
+                            </div>
+                            <div class="col-md-4 mb-2">
+                                <input type="text" class="form-control" id="alergias" placeholder="Alergias conocidas (opcional)">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="sintomas" 
+                                   placeholder="Describe los síntomas del cliente...">
+                            <button class="btn btn-primary" type="button" id="enviarBtn">
+                                <i class="fas fa-paper-plane"></i> Enviar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <!-- Sugerencias rápidas -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-lightbulb"></i> Consultas Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="suggestion-chip" onclick="enviarSugerencia('dolor de cabeza')">
+                        🤕 Dolor de cabeza
+                    </div>
+                    <div class="suggestion-chip" onclick="enviarSugerencia('fiebre y tos')">
+                        🌡️ Fiebre y tos
+                    </div>
+                    <div class="suggestion-chip" onclick="enviarSugerencia('alergia estornudos')">
+                        🤧 Alergia
+                    </div>
+                    <div class="suggestion-chip" onclick="enviarSugerencia('dolor muscular')">
+                        💪 Dolor muscular
+                    </div>
+                    <div class="suggestion-chip" onclick="enviarSugerencia('malestar estómago')">
+                        🤢 Malestar estómago
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resultados locales (fallback) -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="fas fa-pills"></i> Medicamentos Relacionados</h5>
+                </div>
+                <div class="card-body" id="resultadosLocales">
+                    <p class="text-muted text-center">Los resultados aparecerán aquí</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let chatContainer = document.getElementById('chatContainer');
+let sintomasInput = document.getElementById('sintomas');
+let edadInput = document.getElementById('edad');
+let alergiasInput = document.getElementById('alergias');
+let enviarBtn = document.getElementById('enviarBtn');
+
+function agregarMensaje(texto, tipo) {
+    let mensajeDiv = document.createElement('div');
+    mensajeDiv.className = `message ${tipo}-message`;
+    
+    if (tipo === 'bot') {
+        mensajeDiv.innerHTML = texto.replace(/\n/g, '<br>');
+    } else {
+        mensajeDiv.textContent = texto;
+    }
+    
+    chatContainer.appendChild(mensajeDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function mostrarTyping() {
+    let typingDiv = document.createElement('div');
+    typingDiv.className = 'message bot-message typing-indicator';
+    typingDiv.id = 'typingIndicator';
+    typingDiv.innerHTML = '<span></span><span></span><span></span>';
+    chatContainer.appendChild(typingDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+function ocultarTyping() {
+    let typing = document.getElementById('typingIndicator');
+    if (typing) typing.remove();
+}
+
+function enviarSugerencia(texto) {
+    sintomasInput.value = texto;
+    enviarConsulta();
+}
+
+async function enviarConsulta() {
+    let sintomas = sintomasInput.value.trim();
+    if (!sintomas) {
+        alert('Por favor, describe los síntomas');
+        return;
+    }
+    
+    let edad = edadInput.value || null;
+    let alergias = alergiasInput.value || null;
+    
+    // Agregar mensaje del usuario
+    agregarMensaje(sintomas, 'user');
+    sintomasInput.value = '';
+    
+    // Mostrar indicador de escritura
+    mostrarTyping();
+    
+    try {
+        let response = await fetch('{{ url_for("chatbot.consultar") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                sintomas: sintomas,
+                edad: edad,
+                alergias: alergias
+            })
+        });
+        
+        let data = await response.json();
+        
+        ocultarTyping();
+        
+        if (data.error) {
+            agregarMensaje('Error: ' + data.error, 'bot');
+        } else {
+            agregarMensaje(data.respuesta, 'bot');
+            
+            // Mostrar resultados locales
+            let resultadosHtml = '';
+            if (data.resultados_locales && data.resultados_locales.length > 0) {
+                data.resultados_locales.forEach(med => {
+                    resultadosHtml += `
+                        <div class="medicamento-card">
+                            <strong>${med.nombre}</strong><br>
+                            <small>Precio: $${med.precio.toLocaleString()}</small><br>
+                            <small>Stock: ${med.stock} unidades</small><br>
+                            ${med.requiere_receta ? '<span class="badge bg-warning">Requiere Receta</span>' : ''}
+                        </div>
+                    `;
+                });
+            } else {
+                resultadosHtml = '<p class="text-muted text-center">No se encontraron medicamentos relacionados</p>';
+            }
+            document.getElementById('resultadosLocales').innerHTML = resultadosHtml;
+        }
+    } catch (error) {
+        ocultarTyping();
+        agregarMensaje('Error al conectar con el asistente', 'bot');
+        console.error(error);
+    }
+}
+
+enviarBtn.addEventListener('click', enviarConsulta);
+sintomasInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') enviarConsulta();
+});
+</script>
+{% endblock %}
+EOF

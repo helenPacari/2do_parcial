@@ -96,7 +96,8 @@ def listar():
 def detalle(id):
     """Muestra el detalle de un medicamento específico"""
     medicamento = Medicamento.query.get_or_404(id)
-    return render_template('medicamentos/detalle.html', medicamento=medicamento)
+    hoy = date.today()
+    return render_template('medicamentos/detalle.html', medicamento=medicamento,  hoy=hoy )
 
 # ============================================
 # CREAR MEDICAMENTO (CREATE)
