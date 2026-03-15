@@ -5,40 +5,204 @@
 {% block content %}
 <div class="row">
     <div class="col-md-4">
-        <div class="card">
+        <!-- Tarjeta de información del usuario -->
+        <div class="card mb-4">
             <div class="card-header bg-primary text-white">
-                <h4 class="mb-0">👤 Mi Perfil</h4>
+                <h4 class="mb-0"><i class="fas fa-user-circle"></i> Mi Perfil</h4>
             </div>
             <div class="card-body">
-                <p><strong>Nombre:</strong> {{ usuario.nombre }} {{ usuario.apellidos }}</p>
-                <p><strong>Email:</strong> {{ usuario.email }}</p>
-                <p><strong>Teléfono:</strong> {{ usuario.telefono }}</p>
-                <p><strong>Miembro desde:</strong> {{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</p>
+                <table class="table table-borderless">
+                    <tr>
+                        <th>Nombre:</th>
+                        <td>{{ usuario.nombre }} {{ usuario.apellidos }}</td>
+                    </tr>
+                    <tr>
+                        <th>Email:</th>
+                        <td>{{ usuario.email }}</td>
+                    </tr>
+                    <tr>
+                        <th>Teléfono:</th>
+                        <td>{{ usuario.telefono }}</td>
+                    </tr>
+                    <tr>
+                        <th>Rol:</th>
+                        <td>
+                            <span class="badge bg-info">{{ usuario.rol }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Miembro desde:</th>
+                        <td>{{ usuario.fecha_registro.strftime('%d/%m/%Y') }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        
+        <!-- Formulario para cambiar contraseña -->
+        <div class="card mb-4">
+            <div class="card-header bg-warning">
+                <h5 class="mb-0"><i class="fas fa-key"></i> Cambiar Contraseña</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.perfil') }}">
+                    {{ password_form.hidden_tag() }}
+                    <input type="hidden" name="cambiar_password" value="1">
+                    
+                    <div class="mb-3">
+                        {{ password_form.password_actual.label(class="form-label") }}
+                        {{ password_form.password_actual(class="form-control" + (" is-invalid" if password_form.password_actual.errors else "")) }}
+                        {% for error in password_form.password_actual.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ password_form.nueva_password.label(class="form-label") }}
+                        {{ password_form.nueva_password(class="form-control" + (" is-invalid" if password_form.nueva_password.errors else "")) }}
+                        {% for error in password_form.nueva_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ password_form.confirmar_password.label(class="form-label") }}
+                        {{ password_form.confirmar_password(class="form-control" + (" is-invalid" if password_form.confirmar_password.errors else "")) }}
+                        {% for error in password_form.confirmar_password.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning w-100">
+                        <i class="fas fa-sync-alt"></i> Cambiar Contraseña
+                    </button>
+                </form>
             </div>
         </div>
     </div>
     
     <div class="col-md-8">
+        <!-- Formulario para actualizar datos personales -->
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
+                <h5 class="mb-0"><i class="fas fa-edit"></i> Actualizar Mis Datos</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('auth.perfil') }}">
+                    {{ perfil_form.hidden_tag() }}
+                    <input type="hidden" name="actualizar_datos" value="1">
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            {{ perfil_form.nombre.label(class="form-label") }}
+                            {{ perfil_form.nombre(class="form-control" + (" is-invalid" if perfil_form.nombre.errors else "")) }}
+                            {% for error in perfil_form.nombre.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            {{ perfil_form.apellidos.label(class="form-label") }}
+                            {{ perfil_form.apellidos(class="form-control" + (" is-invalid" if perfil_form.apellidos.errors else "")) }}
+                            {% for error in perfil_form.apellidos.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        {{ perfil_form.telefono.label(class="form-label") }}
+                        {{ perfil_form.telefono(class="form-control" + (" is-invalid" if perfil_form.telefono.errors else "")) }}
+                        {% for error in perfil_form.telefono.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle"></i> 
+                        <strong>Email:</strong> {{ usuario.email }} (No se puede cambiar, es tu identificador único)
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-save"></i> Actualizar Datos
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Actividad del usuario -->
         <div class="card">
             <div class="card-header bg-info text-white">
-                <h4 class="mb-0">📊 Mi Actividad</h4>
+                <h4 class="mb-0"><i class="fas fa-history"></i> Mi Actividad</h4>
             </div>
             <div class="card-body">
                 <h5>Medicamentos que he creado</h5>
                 {% if usuario.medicamentos_creados.count() > 0 %}
-                    <ul class="list-group">
-                        {% for med in usuario.medicamentos_creados.limit(5) %}
-                            <li class="list-group-item">
-                                {{ med.nombre }} - ${{ med.precio }}
-                                <small class="text-muted float-end">{{ med.fecha_creacion.strftime('%d/%m/%Y') }}</small>
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Medicamento</th>
+                                    <th>Precio</th>
+                                    <th>Stock</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for med in usuario.medicamentos_creados.limit(10) %}
+                                <tr>
+                                    <td>{{ med.nombre }}</td>
+                                    <td>${{ "{:,.0f}".format(med.precio_venta) }}</td>
+                                    <td>{{ med.stock }}</td>
+                                    <td>{{ med.fecha_creacion.strftime('%d/%m/%Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% if usuario.medicamentos_creados.count() > 10 %}
+                        <p class="text-muted small">Mostrando 10 de {{ usuario.medicamentos_creados.count() }} medicamentos</p>
+                    {% endif %}
                 {% else %}
                     <p class="text-muted">Aún no has creado ningún medicamento.</p>
+                    <a href="{{ url_for('medicamentos.crear') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus"></i> Crear mi primer medicamento
+                    </a>
+                {% endif %}
+                
+                <!-- Ventas realizadas por el usuario -->
+                {% if usuario.ventas.count() > 0 %}
+                <hr>
+                <h5 class="mt-3">Mis ventas realizadas</h5>
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Factura</th>
+                                <th>Fecha</th>
+                                <th>Total</th>
+                                <th>Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for venta in usuario.ventas.limit(5) %}
+                            <tr>
+                                <td>{{ venta.numero_factura }}</td>
+                                <td>{{ venta.fecha.strftime('%d/%m/%Y') }}</td>
+                                <td>${{ "{:,.0f}".format(venta.total) }}</td>
+                                <td>
+                                    <a href="{{ url_for('ventas.detalle', id=venta.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
                 {% endif %}
             </div>
         </div>
     </div>
 </div>
 {% endblock %}
+EOF
