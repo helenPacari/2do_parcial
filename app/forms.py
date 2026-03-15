@@ -194,3 +194,67 @@ class DetalleVentaForm(FlaskForm):
         NumberRange(min=1, message="La cantidad debe ser al menos 1")
     ])
     submit = SubmitField('Agregar')
+
+
+# app/forms.py - Agregar al final del archivo
+
+class CambiarPasswordForm(FlaskForm):
+    password_actual = PasswordField('Contraseña Actual', validators=[
+        DataRequired(message="Debes ingresar tu contraseña actual")
+    ])
+    nueva_password = PasswordField('Nueva Contraseña', validators=[
+        DataRequired(message="La nueva contraseña es obligatoria"),
+        Length(min=6, message="La contraseña debe tener al menos 6 caracteres")
+    ])
+    confirmar_password = PasswordField('Confirmar Nueva Contraseña', validators=[
+        DataRequired(message="Confirma tu nueva contraseña"),
+        EqualTo('nueva_password', message="Las contraseñas no coinciden")
+    ])
+    submit = SubmitField('Cambiar Contraseña')
+
+class ActualizarPerfilForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[
+        DataRequired(message="El nombre es obligatorio"),
+        Length(min=2, max=50)
+    ])
+    apellidos = StringField('Apellidos', validators=[
+        DataRequired(message="Los apellidos son obligatorios"),
+        Length(min=2, max=100)
+    ])
+    telefono = StringField('Teléfono', validators=[
+        DataRequired(message="El teléfono es obligatorio"),
+        Length(min=8, max=20)
+    ])
+    submit = SubmitField('Actualizar Datos')
+
+# app/forms.py - Agregar al final
+
+class AdminCrearUsuarioForm(FlaskForm):
+    nombre = StringField('Nombre', validators=[
+        DataRequired(message="El nombre es obligatorio"),
+        Length(min=2, max=50)
+    ])
+    apellidos = StringField('Apellidos', validators=[
+        DataRequired(message="Los apellidos son obligatorios"),
+        Length(min=2, max=100)
+    ])
+    telefono = StringField('Teléfono', validators=[
+        DataRequired(message="El teléfono es obligatorio"),
+        Length(min=8, max=20)
+    ])
+    email = StringField('Email', validators=[
+        DataRequired(message="El email es obligatorio"),
+        Email(message="Ingresa un email válido")
+    ])
+    rol = SelectField('Rol', choices=[
+        ('vendedor', 'Vendedor'),
+        ('bodeguero', 'Bodeguero'),
+        ('admin', 'Administrador')
+    ], validators=[DataRequired()])
+    submit = SubmitField('Crear Usuario')
+    
+    def validate_email(self, email):
+        from app.models import Usuario
+        usuario = Usuario.query.filter_by(email=email.data).first()
+        if usuario:
+            raise ValidationError('Este email ya está registrado.')

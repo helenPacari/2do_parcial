@@ -65,3 +65,64 @@ body {
     font-size: 0.9em;
     padding: 5px 10px;
 }
+
+/* Estilos para el dashboard */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.border-left-primary {
+    border-left: 4px solid #4e73df !important;
+}
+
+.border-left-success {
+    border-left: 4px solid #1cc88a !important;
+}
+
+.border-left-info {
+    border-left: 4px solid #36b9cc !important;
+}
+
+.border-left-warning {
+    border-left: 4px solid #f6c23e !important;
+}
+
+.text-gray-300 {
+    color: #dddfeb !important;
+}
+
+.text-xs {
+    font-size: 0.7rem;
+}
+
+.progress {
+    height: 20px;
+    border-radius: 10px;
+}
+
+.analisis-ia .alert {
+    margin-bottom: 20px;
+}
+
+.analisis-ia .card {
+    margin-bottom: 20px;
+}
+
+.analisis-ia ul {
+    padding-left: 0;
+}
+
+.analisis-ia li {
+    padding: 8px 0;
+    border-bottom: 1px solid #f8f9fc;
+}
+
+.analisis-ia li:last-child {
+    border-bottom: none;
+}
