@@ -38,6 +38,25 @@
                         <li><a class="dropdown-item" href="#">Laboratorios</a></li>
                     </ul>
                 </li>
+
+                <li class="nav-item">
+    <a class="nav-link" href="{{ url_for('chatbot.index') }}">
+        <i class="fas fa-robot"></i> Asistente
+    </a>
+</li>
+                <!-- En app/templates/base.html, dentro del menú -->
+{% if current_user.is_authenticated and current_user.rol == 'admin' %}
+<li class="nav-item dropdown">
+    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+        <i class="fas fa-cog"></i> Admin
+    </a>
+    <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{{ url_for('admin.listar_usuarios') }}">
+            <i class="fas fa-users"></i> Usuarios
+        </a></li>
+    </ul>
+</li>
+{% endif %}
                 </ul>
                 <ul class="navbar-nav">
                     {% if current_user.is_authenticated %}
